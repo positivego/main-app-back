@@ -1,8 +1,54 @@
-import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
+import { NestFactory } from "@nestjs/core";
+import * as basicAuth from "express-basic-auth";
+import helmet from "helmet";
+import { AccountsModule } from "./accounts/accounts.module";
+import { AppModule } from "./app.module";
+import { AuthModule } from "./auth/auth.module";
+import { RolesModule } from "./roles/roles.module";
+import menuSwagger from "./swagger/menu.swagger";
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
-  await app.listen(process.env.PORT ?? 3000);
+  const app = await NestFactory.create(AppModule, {
+    cors: {
+      origin: /https?:\//,
+      methods: "GET,POST,PUT,PATCH,DELETE",
+      preflightContinue: false,
+      optionsSuccessStatus: 204,
+      credentials: true,
+    },
+    bufferLogs: true,
+  });
+
+  app.use(
+    helmet({
+      contentSecurityPolicy: false,
+      crossOriginEmbedderPolicy: false,
+    })
+  );
+
+  if (process.env.MODE != "dev") {
+    app.use(
+      ["/docs", "docs-json"],
+      basicAuth({
+        challenge: true,
+        users: {
+          [process.env.SWAGGER_USER!]: process.env.SWAGGER_PASSWORD!,
+        },
+      })
+    );
+  }
+
+  menuSwagger
+    .setApp(app)
+    .setMenu([
+      {
+        name: "Главная",
+        path: "/docs",
+        module: [AppModule, RolesModule, AccountsModule, AuthModule],
+      },
+    ])
+    .get("Main App", "Описание API");
+
+  await app.listen(3000);
 }
 bootstrap();
