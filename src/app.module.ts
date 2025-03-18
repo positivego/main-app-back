@@ -9,6 +9,7 @@ import { AccountsModule } from "./accounts/accounts.module";
 import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
 import { AuthModule } from "./auth/auth.module";
+import { MoviesterModule } from "./moviester/moviester.module";
 import { CacheRedisModule } from "./redis/redis.module";
 import { RolesModule } from "./roles/roles.module";
 
@@ -47,10 +48,11 @@ import { RolesModule } from "./roles/roles.module";
       inject: [ConfigService],
     }),
 
+    AuthModule,
     CacheRedisModule,
     RolesModule,
     AccountsModule,
-    AuthModule,
+    MoviesterModule,
   ],
   controllers: [AppController],
   providers: [AppService],

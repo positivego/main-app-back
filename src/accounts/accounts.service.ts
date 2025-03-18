@@ -77,6 +77,27 @@ export class AccountsService {
     return account;
   }
 
+  /**
+   * Обновляем аккаунт, пока только permissions
+   * @param {AccountEntity} data
+   * @returns AccountEntity
+   */
+  async update(data: AccountEntity): Promise<AccountEntity> {
+    const { id: accountId, permissions: newPermissions } = data;
+
+    const account = await this.repo.findOne({ where: { id: accountId } });
+    if (!account) throw new HttpException("account not found", HttpStatus.BAD_REQUEST);
+
+    await this.repo.update({ id: accountId }, { permissions: newPermissions });
+    return data;
+  }
+
+  /**
+   * Обновляем токен у аккаунта
+   * @param {number} accoundId
+   * @param {string} token
+   * @returns UpdateResult
+   */
   async updateToken(accoundId: number, token: string) {
     return this.repo.update(accoundId, { refreshToken: token });
   }
