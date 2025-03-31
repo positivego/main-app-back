@@ -11,12 +11,12 @@ export class JwtAuthGuard implements CanActivate {
   ) {}
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const req: Request = context.switchToHttp().getRequest();
-    const accessToken = req.headers["authorization"].split(" ")[1];
 
     // либо например когда делаем запросы с moviestera то проверяем его ключ
     // и если он валидный то return true
 
     try {
+      const accessToken = req.headers["authorization"]?.split(" ")?.[1] ?? "";
       const jwtData = await this.jwtService.verify(accessToken, { secret: process.env.JWT_SECRET });
 
       const account = await this.AccountService.getOne({ id: jwtData.id });

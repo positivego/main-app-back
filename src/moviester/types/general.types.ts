@@ -1,4 +1,4 @@
-export class EntityName {
+export class MoviesterEntityName {
   ru: string;
   en: string;
 }

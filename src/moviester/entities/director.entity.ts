@@ -1,5 +1,5 @@
 import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
-import { EntityName } from "../types/general.types";
+import { MoviesterEntityName } from "../types/general.types";
 
 @Entity("directors")
 export class MoviesterDirectorEntity {
@@ -7,7 +7,7 @@ export class MoviesterDirectorEntity {
   id: number;
 
   @Column({ type: "json" })
-  name: EntityName;
+  name: MoviesterEntityName;
 
   @Column({ type: "text" })
   image: string;

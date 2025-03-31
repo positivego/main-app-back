@@ -1,5 +1,10 @@
 import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
-import { EntityName } from "../types/general.types";
+import { MoviesterEntityName } from "../types/general.types";
+
+export class MoviesterMovieImages {
+  poster: string;
+  images: string[];
+}
 
 @Entity("movies")
 export class MoviesterMovieEntity {
@@ -7,7 +12,7 @@ export class MoviesterMovieEntity {
   id?: number;
 
   @Column({ type: "json" })
-  name: EntityName;
+  name: MoviesterEntityName;
 
   @Column({ type: "varchar", length: 255 })
   releseDate: string;
@@ -22,10 +27,13 @@ export class MoviesterMovieEntity {
   directorId: number;
 
   @Column({ type: "int" })
-  time: number;
+  timeCount: number;
 
   @Column({ type: "int" })
   typeId: number;
+
+  @Column({ type: "json" })
+  images: MoviesterMovieImages;
 
   @CreateDateColumn({ type: "timestamp", default: () => "CURRENT_TIMESTAMP" })
   createdAt?: Date;
