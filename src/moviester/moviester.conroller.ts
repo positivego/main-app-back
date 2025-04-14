@@ -5,12 +5,15 @@ import { MoviesterActorsService } from "./actors/actors.service";
 import { MoviesterCountriesService } from "./countries/countries.service";
 import { MoviesterDirectorsService } from "./directors/directors.service";
 import { MoviesterGenreEntity } from "./entities/genre.entity";
+import { MoviesterMovieTypeEntity } from "./entities/movie-type.entity";
 import { GenreCreateExamples, GenreUpdateExamples } from "./examples/genres.examples";
+import { MovieTypeCreateExamples, MovieTypeUpdateExamples } from "./examples/movie-types.examples";
 import { MoviesterGenresService } from "./genres/genres.service";
 import { MoviesterMovieTypesService } from "./movie-types/movie-types.service";
 import { MoviesterMoviesService } from "./movies/movies.service";
 import { MoviesterEntityName } from "./types/general.types";
 import { GenresQueryParams } from "./types/genres.types";
+import { MovieTypesQueryParams } from "./types/movie-types.types";
 
 @ApiTags("moviester")
 @Controller("moviester")
@@ -24,6 +27,44 @@ export class MoviesterController {
     private directorsService: MoviesterDirectorsService,
     private coutriesService: MoviesterCountriesService
   ) {}
+
+  // ТИПЫ
+
+  @Get("/movie-types")
+  @ApiOperation({
+    summary: "Получаем список типов",
+  })
+  getTypes(@Query() params: MovieTypesQueryParams) {
+    return this.movieTypesService.getWithPagination(params);
+  }
+
+  @Post("/movie-types")
+  @ApiOperation({
+    summary: "Создаем новый тип",
+  })
+  @ApiBody({ type: MoviesterEntityName, examples: MovieTypeCreateExamples })
+  createType(@Body() typeData: MoviesterEntityName) {
+    return this.movieTypesService.create(typeData);
+  }
+
+  @Patch("/movie-types")
+  @ApiOperation({
+    summary: "Обновляем тип",
+  })
+  @ApiBody({ type: MoviesterMovieTypeEntity, examples: MovieTypeUpdateExamples })
+  updateType(@Body() typeData: MoviesterMovieTypeEntity) {
+    return this.movieTypesService.update(typeData);
+  }
+
+  @Delete("/movie-types/:id")
+  @ApiOperation({
+    summary: "Удаляем тип",
+  })
+  deleteType(@Param("id") typeId: string) {
+    return this.movieTypesService.delete(+typeId);
+  }
+
+  // ЖАНРЫ
 
   @Get("/genres")
   @ApiOperation({
