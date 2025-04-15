@@ -4,13 +4,16 @@ import { JwtAuthGuard } from "src/auth/guards/jwt-auth.guard";
 import { MoviesterActorsService } from "./actors/actors.service";
 import { MoviesterCountriesService } from "./countries/countries.service";
 import { MoviesterDirectorsService } from "./directors/directors.service";
+import { MoviesterCountryEntity } from "./entities/country.entity";
 import { MoviesterGenreEntity } from "./entities/genre.entity";
 import { MoviesterMovieTypeEntity } from "./entities/movie-type.entity";
+import { CountryCreateExamples, CountryUpdateExamples } from "./examples/countries.examples";
 import { GenreCreateExamples, GenreUpdateExamples } from "./examples/genres.examples";
 import { MovieTypeCreateExamples, MovieTypeUpdateExamples } from "./examples/movie-types.examples";
 import { MoviesterGenresService } from "./genres/genres.service";
 import { MoviesterMovieTypesService } from "./movie-types/movie-types.service";
 import { MoviesterMoviesService } from "./movies/movies.service";
+import { CountriesQueryParams } from "./types/counties.types";
 import { MoviesterEntityName } from "./types/general.types";
 import { GenresQueryParams } from "./types/genres.types";
 import { MovieTypesQueryParams } from "./types/movie-types.types";
@@ -98,5 +101,41 @@ export class MoviesterController {
   })
   deleteGenre(@Param("id") genreId: string) {
     return this.genresService.delete(+genreId);
+  }
+
+  // СТРАНЫ
+
+  @Get("/countries")
+  @ApiOperation({
+    summary: "Получаем список стран",
+  })
+  getCountries(@Query() params: CountriesQueryParams) {
+    return this.coutriesService.getWithPagination(params);
+  }
+
+  @Post("/countries")
+  @ApiOperation({
+    summary: "Создаем новую страну",
+  })
+  @ApiBody({ type: MoviesterEntityName, examples: CountryCreateExamples })
+  createCountry(@Body() genreData: MoviesterEntityName) {
+    return this.coutriesService.create(genreData);
+  }
+
+  @Patch("/countries")
+  @ApiOperation({
+    summary: "Обновляем страну",
+  })
+  @ApiBody({ type: MoviesterCountryEntity, examples: CountryUpdateExamples })
+  updateCountry(@Body() countryData: MoviesterCountryEntity) {
+    return this.coutriesService.update(countryData);
+  }
+
+  @Delete("/countries/:id")
+  @ApiOperation({
+    summary: "Удаляем страну",
+  })
+  deleteConytry(@Param("id") countryId: string) {
+    return this.coutriesService.delete(+countryId);
   }
 }

@@ -4,7 +4,7 @@ import { MoviesterEntityName } from "../types/general.types";
 @Entity("countries")
 export class MoviesterCountryEntity {
   @PrimaryGeneratedColumn()
-  id: number;
+  id?: number;
 
   @Column({ type: "json" })
   name: MoviesterEntityName;
