@@ -2,13 +2,16 @@ import { CacheModule } from "@nestjs/cache-manager";
 import { Module } from "@nestjs/common";
 import { ConfigModule, ConfigService } from "@nestjs/config";
 import { ScheduleModule } from "@nestjs/schedule";
+import { ServeStaticModule } from "@nestjs/serve-static";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { redisStore } from "cache-manager-redis-store";
 import { appConfig } from "config/app.config";
+import { join } from "path";
 import { AccountsModule } from "./accounts/accounts.module";
 import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
 import { AuthModule } from "./auth/auth.module";
+import { DirectoryService } from "./directory.service";
 import { MoviesterModule } from "./moviester/moviester.module";
 import { CacheRedisModule } from "./redis/redis.module";
 import { RolesModule } from "./roles/roles.module";
@@ -18,6 +21,11 @@ import { RolesModule } from "./roles/roles.module";
     ConfigModule.forRoot({
       load: [appConfig],
       isGlobal: true,
+    }),
+
+    ServeStaticModule.forRoot({
+      rootPath: join(process.cwd(), "uploads"),
+      serveRoot: "/uploads",
     }),
 
     TypeOrmModule.forRootAsync({
@@ -55,6 +63,6 @@ import { RolesModule } from "./roles/roles.module";
     MoviesterModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, DirectoryService],
 })
 export class AppModule {}

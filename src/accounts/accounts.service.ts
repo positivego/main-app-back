@@ -17,6 +17,7 @@ export class AccountsService {
    * @returns AccountsPaginationData | null
    */
   async getWithPagination(params: AccountsQueryParams): Promise<AccountsPaginationData> {
+    console.log({ params });
     const query = this.repo.createQueryBuilder("accounts");
     if (params?.search?.length) {
       query.where("LOWER(accounts.email) LIKE LOWER(:search) OR LOWER(accounts.username) LIKE LOWER(:search)", {
@@ -27,7 +28,7 @@ export class AccountsService {
     const { page, limit } = params;
     const offset = limit * page - limit;
 
-    query.orderBy("accounts.createdAt", "DESC").skip(offset).take(limit);
+    query.orderBy("accounts.id", "DESC").skip(offset).take(limit);
 
     const [accounts, total] = await query.getManyAndCount();
     const count = accounts?.length;

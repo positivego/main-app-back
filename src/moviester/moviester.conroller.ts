@@ -1,4 +1,17 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from "@nestjs/common";
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  UploadedFiles,
+  UseGuards,
+  UseInterceptors,
+} from "@nestjs/common";
+import { FilesInterceptor } from "@nestjs/platform-express";
 import { ApiBody, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { JwtAuthGuard } from "src/auth/guards/jwt-auth.guard";
 import { MoviesterActorsService } from "./actors/actors.service";
@@ -13,6 +26,7 @@ import { MovieTypeCreateExamples, MovieTypeUpdateExamples } from "./examples/mov
 import { MoviesterGenresService } from "./genres/genres.service";
 import { MoviesterMovieTypesService } from "./movie-types/movie-types.service";
 import { MoviesterMoviesService } from "./movies/movies.service";
+import { ActorsQueryParams } from "./types/actors.types";
 import { CountriesQueryParams } from "./types/counties.types";
 import { MoviesterEntityName } from "./types/general.types";
 import { GenresQueryParams } from "./types/genres.types";
@@ -137,5 +151,21 @@ export class MoviesterController {
   })
   deleteConytry(@Param("id") countryId: string) {
     return this.coutriesService.delete(+countryId);
+  }
+
+  // АКТЕРЫ
+
+  @Get("actors")
+  @ApiOperation({
+    summary: "Получаем список акторов",
+  })
+  getActors(@Query() params: ActorsQueryParams) {
+    return this.actorsService.getWithPagination(params);
+  }
+
+  @Post("actors")
+  @UseInterceptors(FilesInterceptor("images", 10))
+  async createActor(@Body() createActorDto: any, @UploadedFiles() images: Express.Multer.File[]) {
+    return this.actorsService.create(createActorDto, images);
   }
 }

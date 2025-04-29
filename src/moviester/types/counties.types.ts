@@ -5,7 +5,7 @@ export class CountriesQueryParams {
   limit: number;
 }
 
-export class CointriesPaginationData {
+export class CountriesPaginationData {
   countries: MoviesterCountryEntity[];
   count: number;
   totalCount: number;

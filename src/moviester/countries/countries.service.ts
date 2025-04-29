@@ -2,7 +2,7 @@ import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { MoviesterCountryEntity } from "../entities/country.entity";
-import { CointriesPaginationData, CountriesQueryParams } from "../types/counties.types";
+import { CountriesPaginationData, CountriesQueryParams } from "../types/counties.types";
 import { MoviesterEntityName } from "../types/general.types";
 
 @Injectable()
@@ -22,9 +22,9 @@ export class MoviesterCountriesService {
   /**
    * Метод находит страны по параметрам с пагинацией
    * @param {CountriesQueryParams} params
-   * @returns CointriesPaginationData | null
+   * @returns CountriesPaginationData | null
    */
-  async getWithPagination(params: CountriesQueryParams): Promise<CointriesPaginationData> {
+  async getWithPagination(params: CountriesQueryParams): Promise<CountriesPaginationData> {
     const query = this.repo.createQueryBuilder("countries");
 
     const { page, limit } = params;

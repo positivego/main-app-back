@@ -4,11 +4,14 @@ import { MoviesterEntityName } from "../types/general.types";
 @Entity("actors")
 export class MoviesterActorEntity {
   @PrimaryGeneratedColumn()
-  id: number;
+  id?: number;
 
   @Column({ type: "json" })
   name: MoviesterEntityName;
 
-  @Column({ type: "text" })
-  image: string;
+  @Column({ type: "varchar" })
+  slug: string;
+
+  @Column({ type: "json" })
+  images: string[];
 }
