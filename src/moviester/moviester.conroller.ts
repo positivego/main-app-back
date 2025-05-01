@@ -20,13 +20,14 @@ import { MoviesterDirectorsService } from "./directors/directors.service";
 import { MoviesterCountryEntity } from "./entities/country.entity";
 import { MoviesterGenreEntity } from "./entities/genre.entity";
 import { MoviesterMovieTypeEntity } from "./entities/movie-type.entity";
+import { ActorCreateExamples } from "./examples/actors.examples";
 import { CountryCreateExamples, CountryUpdateExamples } from "./examples/countries.examples";
 import { GenreCreateExamples, GenreUpdateExamples } from "./examples/genres.examples";
 import { MovieTypeCreateExamples, MovieTypeUpdateExamples } from "./examples/movie-types.examples";
 import { MoviesterGenresService } from "./genres/genres.service";
 import { MoviesterMovieTypesService } from "./movie-types/movie-types.service";
 import { MoviesterMoviesService } from "./movies/movies.service";
-import { ActorsQueryParams } from "./types/actors.types";
+import { ActorCreateDto, ActorsQueryParams } from "./types/actors.types";
 import { CountriesQueryParams } from "./types/counties.types";
 import { MoviesterEntityName } from "./types/general.types";
 import { GenresQueryParams } from "./types/genres.types";
@@ -155,7 +156,7 @@ export class MoviesterController {
 
   // АКТЕРЫ
 
-  @Get("actors")
+  @Get("/actors")
   @ApiOperation({
     summary: "Получаем список акторов",
   })
@@ -163,9 +164,18 @@ export class MoviesterController {
     return this.actorsService.getWithPagination(params);
   }
 
-  @Post("actors")
+  @Post("/actors")
   @UseInterceptors(FilesInterceptor("images", 10))
-  async createActor(@Body() createActorDto: any, @UploadedFiles() images: Express.Multer.File[]) {
-    return this.actorsService.create(createActorDto, images);
+  @ApiBody({ type: ActorCreateDto, examples: ActorCreateExamples })
+  async createActor(@Body() createActorDto: ActorCreateDto, @UploadedFiles() images: Express.Multer.File[]) {
+    return this.actorsService.create(createActorDto.data, images);
+  }
+
+  @Delete("/actors/:id")
+  @ApiOperation({
+    summary: "Удаляем страну",
+  })
+  deleteActor(@Param("id") actorId: string) {
+    return this.actorsService.delete(+actorId);
   }
 }

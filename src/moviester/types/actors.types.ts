@@ -1,4 +1,5 @@
 import { MoviesterActorEntity } from "../entities/actor.entity";
+import { MoviesterEntityName } from "./general.types";
 
 export class ActorsQueryParams {
   page: number;
@@ -11,4 +12,12 @@ export class ActorsPaginationData {
   totalCount: number;
   page: number;
   pageCount: number;
+}
+
+export class NewActorData {
+  name: MoviesterEntityName;
+}
+
+export class ActorCreateDto {
+  data: string;
 }

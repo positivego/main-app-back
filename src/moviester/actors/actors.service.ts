@@ -1,11 +1,11 @@
 import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { existsSync, mkdirSync, writeFileSync } from "fs";
+import { existsSync, mkdirSync, rmSync, writeFileSync } from "fs";
 import { join } from "path";
 import { slugify } from "transliteration";
 import { Repository } from "typeorm";
 import { MoviesterActorEntity } from "../entities/actor.entity";
-import { ActorsPaginationData, ActorsQueryParams } from "../types/actors.types";
+import { ActorsPaginationData, ActorsQueryParams, NewActorData } from "../types/actors.types";
 
 @Injectable()
 export class MoviesterActorsService {
@@ -42,36 +42,35 @@ export class MoviesterActorsService {
 
   /**
    * Метод создает нового актера, а так же все необходимые папки
-   * @param {any} data
+   * @param {string} data
    * @param {Express.Multer.File[]} images
    * @returns MoviesterActorEntity
    */
-  async create(data: any, images: Express.Multer.File[]): Promise<MoviesterActorEntity> {
-    const slug = slugify(data.name);
+  async create(data: string, images: Express.Multer.File[]): Promise<MoviesterActorEntity> {
+    const newActorData = <NewActorData>JSON.parse(data);
 
+    const slug = slugify(newActorData.name.ru);
     const existActor = await this.getBySlug(slug);
     if (existActor) throw new HttpException("Actor is exist", HttpStatus.BAD_REQUEST);
 
-    const actorFolder = join(process.cwd(), "uploads", "actors", slug);
-    if (!existsSync(actorFolder)) mkdirSync(actorFolder, { recursive: true });
-    else throw new HttpException("Incorrect actor folder", HttpStatus.BAD_REQUEST);
-
     const imagesPaths: string[] = [];
-    for (const image of images) {
-      const imageName = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}${image.originalname}`;
-      const imagePath = join(actorFolder, imageName);
 
-      writeFileSync(imagePath, image.buffer);
-      imagesPaths.push(this.stabilizePath(imagePath));
+    if (images?.length) {
+      const actorFolder = join(process.cwd(), "uploads", "actors", slug);
+      if (!existsSync(actorFolder)) mkdirSync(actorFolder, { recursive: true });
+      else throw new HttpException("Incorrect actor folder", HttpStatus.BAD_REQUEST);
+
+      for (const image of images) {
+        const imageName = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}${image.originalname}`;
+        const imagePath = join(actorFolder, imageName);
+
+        writeFileSync(imagePath, image.buffer);
+        imagesPaths.push(this.stabilizePath(imagePath));
+      }
     }
 
-    const test: any = {
-      ru: data.name,
-      en: "",
-    };
-
     const newActor: MoviesterActorEntity = {
-      name: test,
+      name: newActorData.name,
       slug,
       images: imagesPaths,
     };
@@ -81,6 +80,22 @@ export class MoviesterActorsService {
     newActor.id = actorId;
 
     return newActor;
+  }
+
+  /**
+   * Метод удаляет актера
+   * @param {number} actorId
+   * @returns number
+   */
+  async delete(actorId: number): Promise<number> {
+    const actor = await this.repo.findOne({ where: { id: actorId } });
+    if (!actor) throw new HttpException("actor not found", HttpStatus.BAD_REQUEST);
+
+    const actorFolder = join(process.cwd(), "uploads", "actors", actor.slug);
+    if (existsSync(actorFolder)) rmSync(actorFolder, { recursive: true, force: true });
+
+    await this.repo.delete({ id: actorId });
+    return actorId;
   }
 
   /**
