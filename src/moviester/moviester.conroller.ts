@@ -166,6 +166,9 @@ export class MoviesterController {
 
   @Post("/actors")
   @UseInterceptors(FilesInterceptor("images", 10))
+  @ApiOperation({
+    summary: "Создаем актера",
+  })
   @ApiBody({ type: ActorCreateDto, examples: ActorCreateExamples })
   async createActor(@Body() createActorDto: ActorCreateDto, @UploadedFiles() images: Express.Multer.File[]) {
     return this.actorsService.create(createActorDto.data, images);
@@ -173,7 +176,7 @@ export class MoviesterController {
 
   @Delete("/actors/:id")
   @ApiOperation({
-    summary: "Удаляем страну",
+    summary: "Удаляем актера",
   })
   deleteActor(@Param("id") actorId: string) {
     return this.actorsService.delete(+actorId);
