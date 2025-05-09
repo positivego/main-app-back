@@ -1,15 +1,24 @@
 import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { existsSync, mkdirSync, rmSync, writeFileSync } from "fs";
+import { existsSync, mkdirSync, rmSync, unlinkSync, writeFileSync } from "fs";
 import { join } from "path";
 import { slugify } from "transliteration";
 import { Repository } from "typeorm";
 import { MoviesterActorEntity } from "../entities/actor.entity";
-import { ActorsPaginationData, ActorsQueryParams, NewActorData } from "../types/actors.types";
+import { ActorsPaginationData, ActorsQueryParams, ActorUpdateDto, NewActorData } from "../types/actors.types";
+import { MoviesterEntityName } from "../types/general.types";
 
 @Injectable()
 export class MoviesterActorsService {
   constructor(@InjectRepository(MoviesterActorEntity, "dbMoviester") private repo: Repository<MoviesterActorEntity>) {}
+
+  /**
+   * Метод возвращает полный список актеров
+   * @returns MoviesterActorEntity[]
+   */
+  async getAll(): Promise<MoviesterActorEntity[]> {
+    return this.repo.find();
+  }
 
   /**
    * Метод возвращает актера по slug
@@ -83,6 +92,50 @@ export class MoviesterActorsService {
   }
 
   /**
+   * Метод обновляет актера, а так же все необходимые папки
+   * @param {ActorUpdateDto} data
+   * @param {Express.Multer.File[]} images
+   * @returns MoviesterActorEntity
+   */
+  async update(data: ActorUpdateDto, images: Express.Multer.File[]): Promise<MoviesterActorEntity> {
+    const name = <MoviesterEntityName>JSON.parse(data.name);
+
+    const actor = await this.getBySlug(data.slug);
+    if (!actor) throw new HttpException("Actor is not exist", HttpStatus.BAD_REQUEST);
+    if (actor.id !== +data.id) throw new HttpException("Actor is not correct", HttpStatus.BAD_REQUEST);
+
+    const currentImages: string[] = [];
+    const dataImages = this.extractFilenames(data.images);
+    for (const image of actor.images) {
+      const fileName = this.extractFilenames(image)[0];
+      if (dataImages?.includes(fileName)) currentImages.push(image);
+      else {
+        const filePath = join(process.cwd(), "uploads", "actors", actor.slug, fileName);
+        if (existsSync(filePath)) unlinkSync(filePath);
+      }
+    }
+
+    if (images?.length) {
+      const actorFolder = join(process.cwd(), "uploads", "actors", actor.slug);
+      if (!existsSync(actorFolder)) mkdirSync(actorFolder, { recursive: true });
+
+      for (const image of images) {
+        const imageName = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}${image.originalname}`;
+        const imagePath = join(actorFolder, imageName);
+
+        writeFileSync(imagePath, image.buffer);
+        currentImages.push(this.stabilizePath(imagePath));
+      }
+    }
+
+    actor.name = name;
+    actor.images = currentImages;
+    await this.repo.update({ id: +data.id }, { name, images: currentImages });
+
+    return actor;
+  }
+
+  /**
    * Метод удаляет актера
    * @param {number} actorId
    * @returns number
@@ -108,4 +161,18 @@ export class MoviesterActorsService {
     const mainPath = process.env.MODE === "dev" ? "http://localhost:3000/" : "moviester.ru/";
     return `${mainPath}uploads${path}`;
   };
+
+  /**
+   * Метод возвращает имена файлов
+   * @param {string[] | string} input
+   * @returns string[]
+   */
+  private extractFilenames(input: string | string[]): string[] {
+    if (!input?.length) return [];
+    const urls = Array.isArray(input) ? input : [input];
+    return urls.map((url) => {
+      const cleanUrl = url.replace(/^"+|"+$/g, "");
+      return cleanUrl.split("/").pop() || "";
+    });
+  }
 }

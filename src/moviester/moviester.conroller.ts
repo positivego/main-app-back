@@ -8,34 +8,34 @@ import {
   Post,
   Query,
   UploadedFiles,
-  UseGuards,
   UseInterceptors,
 } from "@nestjs/common";
 import { FilesInterceptor } from "@nestjs/platform-express";
 import { ApiBody, ApiOperation, ApiTags } from "@nestjs/swagger";
-import { JwtAuthGuard } from "src/auth/guards/jwt-auth.guard";
 import { MoviesterActorsService } from "./actors/actors.service";
 import { MoviesterCountriesService } from "./countries/countries.service";
 import { MoviesterDirectorsService } from "./directors/directors.service";
 import { MoviesterCountryEntity } from "./entities/country.entity";
 import { MoviesterGenreEntity } from "./entities/genre.entity";
 import { MoviesterMovieTypeEntity } from "./entities/movie-type.entity";
-import { ActorCreateExamples } from "./examples/actors.examples";
+import { ActorCreateExamples, ActorUpdateExamples } from "./examples/actors.examples";
 import { CountryCreateExamples, CountryUpdateExamples } from "./examples/countries.examples";
+import { DirectorCreateExamples, DirectorUpdateExamples } from "./examples/directors.examples";
 import { GenreCreateExamples, GenreUpdateExamples } from "./examples/genres.examples";
 import { MovieTypeCreateExamples, MovieTypeUpdateExamples } from "./examples/movie-types.examples";
 import { MoviesterGenresService } from "./genres/genres.service";
 import { MoviesterMovieTypesService } from "./movie-types/movie-types.service";
 import { MoviesterMoviesService } from "./movies/movies.service";
-import { ActorCreateDto, ActorsQueryParams } from "./types/actors.types";
+import { ActorCreateDto, ActorsQueryParams, ActorUpdateDto } from "./types/actors.types";
 import { CountriesQueryParams } from "./types/counties.types";
+import { DirectorCreateDto, DirectorsQueryParams, DirectorUpdateDto } from "./types/directors.types";
 import { MoviesterEntityName } from "./types/general.types";
 import { GenresQueryParams } from "./types/genres.types";
 import { MovieTypesQueryParams } from "./types/movie-types.types";
 
 @ApiTags("moviester")
 @Controller("moviester")
-@UseGuards(JwtAuthGuard)
+//@UseGuards(JwtAuthGuard)
 export class MoviesterController {
   constructor(
     private moviesService: MoviesterMoviesService,
@@ -45,6 +45,16 @@ export class MoviesterController {
     private directorsService: MoviesterDirectorsService,
     private coutriesService: MoviesterCountriesService
   ) {}
+
+  // КИНО
+
+  @Get("/movies/data")
+  @ApiOperation({
+    summary: "Получаем разные списки данных",
+  })
+  getMoviesData() {
+    return this.moviesService.getMoviesData();
+  }
 
   // ТИПЫ
 
@@ -174,11 +184,59 @@ export class MoviesterController {
     return this.actorsService.create(createActorDto.data, images);
   }
 
+  @Patch("/actors")
+  @UseInterceptors(FilesInterceptor("images", 10))
+  @ApiOperation({
+    summary: "Обновляем актера",
+  })
+  @ApiBody({ type: ActorUpdateDto, examples: ActorUpdateExamples })
+  async updateActor(@Body() updateActorDto: ActorUpdateDto, @UploadedFiles() images: Express.Multer.File[]) {
+    return this.actorsService.update(updateActorDto, images);
+  }
+
   @Delete("/actors/:id")
   @ApiOperation({
     summary: "Удаляем актера",
   })
   deleteActor(@Param("id") actorId: string) {
     return this.actorsService.delete(+actorId);
+  }
+
+  // РЕЖИССЕРЫ
+
+  @Get("/directors")
+  @ApiOperation({
+    summary: "Получаем список режиссеров",
+  })
+  getDirectors(@Query() params: DirectorsQueryParams) {
+    return this.directorsService.getWithPagination(params);
+  }
+
+  @Post("/directors")
+  @UseInterceptors(FilesInterceptor("images", 10))
+  @ApiOperation({
+    summary: "Создаем режиссера",
+  })
+  @ApiBody({ type: DirectorCreateDto, examples: DirectorCreateExamples })
+  async createDirector(@Body() createDirectorDto: DirectorCreateDto, @UploadedFiles() images: Express.Multer.File[]) {
+    return this.directorsService.create(createDirectorDto.data, images);
+  }
+
+  @Patch("/directors")
+  @UseInterceptors(FilesInterceptor("images", 10))
+  @ApiOperation({
+    summary: "Обновляем режиссера",
+  })
+  @ApiBody({ type: DirectorUpdateDto, examples: DirectorUpdateExamples })
+  async updateDirector(@Body() updateDirectorDto: DirectorUpdateDto, @UploadedFiles() images: Express.Multer.File[]) {
+    return this.directorsService.update(updateDirectorDto, images);
+  }
+
+  @Delete("/directors/:id")
+  @ApiOperation({
+    summary: "Удаляем режиссера",
+  })
+  deleteDirector(@Param("id") actorId: string) {
+    return this.directorsService.delete(+actorId);
   }
 }

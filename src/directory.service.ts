@@ -12,9 +12,11 @@ export class DirectoryService implements OnModuleInit {
     const mainFolder = join(process.cwd(), "uploads");
     const filmsFolder = join(mainFolder, "films");
     const actorsFolder = join(mainFolder, "actors");
+    const directorsFolder = join(mainFolder, "directors");
 
     if (!existsSync(mainFolder)) mkdirSync(mainFolder);
     if (!existsSync(filmsFolder)) mkdirSync(filmsFolder);
     if (!existsSync(actorsFolder)) mkdirSync(actorsFolder);
+    if (!existsSync(directorsFolder)) mkdirSync(directorsFolder);
   }
 }
