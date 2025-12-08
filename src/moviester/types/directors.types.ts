@@ -1,5 +1,4 @@
 import { MoviesterDirectorEntity } from "../entities/director.entity";
-import { MoviesterEntityName } from "./general.types";
 
 export class DirectorsQueryParams {
   page: number;
@@ -15,11 +14,11 @@ export class DirectorsPaginationData {
 }
 
 export class NewDirectorData {
-  name: MoviesterEntityName;
+  name: string;
 }
 
 export class DirectorCreateDto {
-  data: string;
+  data: NewDirectorData;
 }
 
 export class DirectorUpdateDto {

@@ -10,7 +10,7 @@ import {
   UploadedFiles,
   UseInterceptors,
 } from "@nestjs/common";
-import { FilesInterceptor } from "@nestjs/platform-express";
+import { FileFieldsInterceptor, FilesInterceptor } from "@nestjs/platform-express";
 import { ApiBody, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { MoviesterActorsService } from "./actors/actors.service";
 import { MoviesterCountriesService } from "./countries/countries.service";
@@ -26,12 +26,13 @@ import { MovieTypeCreateExamples, MovieTypeUpdateExamples } from "./examples/mov
 import { MoviesterGenresService } from "./genres/genres.service";
 import { MoviesterMovieTypesService } from "./movie-types/movie-types.service";
 import { MoviesterMoviesService } from "./movies/movies.service";
-import { ActorCreateDto, ActorsQueryParams, ActorUpdateDto } from "./types/actors.types";
+import { ActorsQueryParams, ActorUpdateDto, NewActorData } from "./types/actors.types";
 import { CountriesQueryParams } from "./types/counties.types";
-import { DirectorCreateDto, DirectorsQueryParams, DirectorUpdateDto } from "./types/directors.types";
+import { DirectorsQueryParams, DirectorUpdateDto, NewDirectorData } from "./types/directors.types";
 import { MoviesterEntityName } from "./types/general.types";
 import { GenresQueryParams } from "./types/genres.types";
 import { MovieTypesQueryParams } from "./types/movie-types.types";
+import { NewMovieData, NewMovieFilesData } from "./types/movies.types";
 
 @ApiTags("moviester")
 @Controller("moviester")
@@ -54,6 +55,17 @@ export class MoviesterController {
   })
   getMoviesData() {
     return this.moviesService.getMoviesData();
+  }
+
+  @UseInterceptors(
+    FileFieldsInterceptor([
+      { name: "images", maxCount: 10 },
+      { name: "poster", maxCount: 1 },
+    ])
+  )
+  @Post("/movies")
+  async createMovie(@Body() data: NewMovieData, @UploadedFiles() files: NewMovieFilesData) {
+    return this.moviesService.create(data, files);
   }
 
   // ТИПЫ
@@ -179,9 +191,10 @@ export class MoviesterController {
   @ApiOperation({
     summary: "Создаем актера",
   })
-  @ApiBody({ type: ActorCreateDto, examples: ActorCreateExamples })
-  async createActor(@Body() createActorDto: ActorCreateDto, @UploadedFiles() images: Express.Multer.File[]) {
-    return this.actorsService.create(createActorDto.data, images);
+  @ApiBody({ type: NewActorData, examples: ActorCreateExamples })
+  async createActor(@Body() createActorDto: NewActorData, @UploadedFiles() images: Express.Multer.File[]) {
+    console.log({ createActorDto });
+    return this.actorsService.create(createActorDto, images);
   }
 
   @Patch("/actors")
@@ -217,9 +230,9 @@ export class MoviesterController {
   @ApiOperation({
     summary: "Создаем режиссера",
   })
-  @ApiBody({ type: DirectorCreateDto, examples: DirectorCreateExamples })
-  async createDirector(@Body() createDirectorDto: DirectorCreateDto, @UploadedFiles() images: Express.Multer.File[]) {
-    return this.directorsService.create(createDirectorDto.data, images);
+  @ApiBody({ type: NewDirectorData, examples: DirectorCreateExamples })
+  async createDirector(@Body() createDirectorDto: NewDirectorData, @UploadedFiles() images: Express.Multer.File[]) {
+    return this.directorsService.create(createDirectorDto, images);
   }
 
   @Patch("/directors")

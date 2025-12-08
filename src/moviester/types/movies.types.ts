@@ -11,3 +11,21 @@ export class MoviesterMoviesData {
   actors: MoviesterActorEntity[];
   directors: MoviesterDirectorEntity[];
 }
+
+export class NewMovieData {
+  name: string;
+  description: string;
+  genresIds: string;
+  actorsIds: string[];
+  releseDate: string;
+  releseYaer: string;
+  countryId: string;
+  directorId: string;
+  timeCount: string;
+  typeId: string;
+}
+
+export class NewMovieFilesData {
+  images?: Express.Multer.File[];
+  poster?: Express.Multer.File[];
+}

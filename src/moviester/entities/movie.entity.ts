@@ -2,7 +2,7 @@ import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateCol
 import { MoviesterEntityName } from "../types/general.types";
 
 export class MoviesterMovieImages {
-  poster: string;
+  poster: string[];
   images: string[];
 }
 
@@ -13,6 +13,12 @@ export class MoviesterMovieEntity {
 
   @Column({ type: "json" })
   name: MoviesterEntityName;
+
+  @Column({ type: "varchar" })
+  slug: string;
+
+  @Column({ type: "text" })
+  description: string;
 
   @Column({ type: "varchar", length: 255 })
   releseDate: string;

@@ -1,9 +1,11 @@
 import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { existsSync, mkdirSync, rmSync, unlinkSync, writeFileSync } from "fs";
+import { directoriesNamesEnum } from "libs/constants/directories.constants";
 import { join } from "path";
 import { slugify } from "transliteration";
 import { Repository } from "typeorm";
+import { extractFilenames, stabilizePath } from "utils/general.utils";
 import { MoviesterDirectorEntity } from "../entities/director.entity";
 import {
   DirectorsPaginationData,
@@ -47,7 +49,7 @@ export class MoviesterDirectorsService {
     const { page, limit } = params;
     const offset = limit * page - limit;
 
-    query.skip(offset).take(limit);
+    query.orderBy("directors.id", "DESC").skip(offset).take(limit);
 
     const [directors, total] = await query.getManyAndCount();
     const count = directors?.length;
@@ -58,21 +60,21 @@ export class MoviesterDirectorsService {
 
   /**
    * Метод создает нового режиссера, а так же все необходимые папки
-   * @param {string} data
+   * @param {NewDirectorData} data
    * @param {Express.Multer.File[]} images
    * @returns MoviesterDirectorEntity
    */
-  async create(data: string, images: Express.Multer.File[]): Promise<MoviesterDirectorEntity> {
-    const newActorData = <NewDirectorData>JSON.parse(data);
+  async create(data: NewDirectorData, images: Express.Multer.File[]): Promise<MoviesterDirectorEntity> {
+    const name: MoviesterEntityName = JSON.parse(data.name);
 
-    const slug = slugify(newActorData.name.ru);
+    const slug = slugify(name.ru);
     const existActor = await this.getBySlug(slug);
     if (existActor) throw new HttpException("Director is exist", HttpStatus.BAD_REQUEST);
 
     const imagesPaths: string[] = [];
 
     if (images?.length) {
-      const actorFolder = join(process.cwd(), "uploads", "directors", slug);
+      const actorFolder = join(process.cwd(), directoriesNamesEnum.main, directoriesNamesEnum.directors, slug);
       if (!existsSync(actorFolder)) mkdirSync(actorFolder, { recursive: true });
       else throw new HttpException("Incorrect director folder", HttpStatus.BAD_REQUEST);
 
@@ -81,12 +83,12 @@ export class MoviesterDirectorsService {
         const imagePath = join(actorFolder, imageName);
 
         writeFileSync(imagePath, image.buffer);
-        imagesPaths.push(this.stabilizePath(imagePath));
+        imagesPaths.push(stabilizePath(imagePath));
       }
     }
 
     const newDirector: MoviesterDirectorEntity = {
-      name: newActorData.name,
+      name,
       slug,
       images: imagesPaths,
     };
@@ -112,18 +114,29 @@ export class MoviesterDirectorsService {
     if (director.id !== +data.id) throw new HttpException("Director is not correct", HttpStatus.BAD_REQUEST);
 
     const currentImages: string[] = [];
-    const dataImages = this.extractFilenames(data.images);
+    const dataImages = extractFilenames(data.images);
     for (const image of director.images) {
-      const fileName = this.extractFilenames(image)[0];
+      const fileName = extractFilenames(image)[0];
       if (dataImages?.includes(fileName)) currentImages.push(image);
       else {
-        const filePath = join(process.cwd(), "uploads", "directors", director.slug, fileName);
+        const filePath = join(
+          process.cwd(),
+          directoriesNamesEnum.main,
+          directoriesNamesEnum.directors,
+          director.slug,
+          fileName
+        );
         if (existsSync(filePath)) unlinkSync(filePath);
       }
     }
 
     if (images?.length) {
-      const directorFolder = join(process.cwd(), "uploads", "directors", director.slug);
+      const directorFolder = join(
+        process.cwd(),
+        directoriesNamesEnum.main,
+        directoriesNamesEnum.directors,
+        director.slug
+      );
       if (!existsSync(directorFolder)) mkdirSync(directorFolder, { recursive: true });
 
       for (const image of images) {
@@ -131,7 +144,7 @@ export class MoviesterDirectorsService {
         const imagePath = join(directorFolder, imageName);
 
         writeFileSync(imagePath, image.buffer);
-        currentImages.push(this.stabilizePath(imagePath));
+        currentImages.push(stabilizePath(imagePath));
       }
     }
 
@@ -151,35 +164,10 @@ export class MoviesterDirectorsService {
     const actor = await this.repo.findOne({ where: { id: directorId } });
     if (!actor) throw new HttpException("director not found", HttpStatus.BAD_REQUEST);
 
-    const actorFolder = join(process.cwd(), "uploads", "directors", actor.slug);
+    const actorFolder = join(process.cwd(), directoriesNamesEnum.main, directoriesNamesEnum.directors, actor.slug);
     if (existsSync(actorFolder)) rmSync(actorFolder, { recursive: true, force: true });
 
     await this.repo.delete({ id: directorId });
     return directorId;
-  }
-
-  /**
-   * Метод возвращает нормальную ссылку для файла
-   * @param {string} currentPath
-   * @returns string
-   */
-  private stabilizePath = (currentPath: string): string => {
-    const path = currentPath.split("uploads").pop();
-    const mainPath = process.env.MODE === "dev" ? "http://localhost:3000/" : "moviester.ru/";
-    return `${mainPath}uploads${path}`;
-  };
-
-  /**
-   * Метод возвращает имена файлов
-   * @param {string[] | string} input
-   * @returns string[]
-   */
-  private extractFilenames(input: string | string[]): string[] {
-    if (!input?.length) return [];
-    const urls = Array.isArray(input) ? input : [input];
-    return urls.map((url) => {
-      const cleanUrl = url.replace(/^"+|"+$/g, "");
-      return cleanUrl.split("/").pop() || "";
-    });
   }
 }
